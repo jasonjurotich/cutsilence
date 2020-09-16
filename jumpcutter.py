@@ -10,13 +10,6 @@ import math
 from shutil import copyfile, rmtree
 import os
 import argparse
-from pytube import YouTube
-
-def downloadFile(url):
-    name = YouTube(url).streams.first().download()
-    newname = name.replace(' ','_')
-    os.rename(name,newname)
-    return newname
 
 def getMaxVolume(s):
     maxv = float(np.max(s))
@@ -66,8 +59,6 @@ parser.add_argument('--frame_quality', type=int, default=3, help="quality of fra
 
 args = parser.parse_args()
 
-
-
 frameRate = args.frame_rate
 SAMPLE_RATE = args.sample_rate
 SILENT_THRESHOLD = args.silent_threshold
@@ -96,7 +87,6 @@ command = "ffmpeg -i "+INPUT_FILE+" -qscale:v "+str(FRAME_QUALITY)+" "+TEMP_FOLD
 subprocess.call(command, shell=True)
 
 command = "ffmpeg -i "+INPUT_FILE+" -ab 160k -ac 2 -ar "+str(SAMPLE_RATE)+" -vn "+TEMP_FOLDER+"/audio.wav"
-
 subprocess.call(command, shell=True)
 
 command = "ffmpeg -i "+TEMP_FOLDER+"/input.mp4 2>&1"
@@ -119,11 +109,8 @@ for line in params:
         frameRate = float(m.group(1))
 
 samplesPerFrame = sampleRate/frameRate
-
 audioFrameCount = int(math.ceil(audioSampleCount/samplesPerFrame))
-
 hasLoudAudio = np.zeros((audioFrameCount))
-
 
 
 for i in range(audioFrameCount):
@@ -165,9 +152,6 @@ for chunk in chunks:
     endPointer = outputPointer+leng
     outputAudioData = np.concatenate((outputAudioData,alteredAudioData/maxAudioVolume))
 
-    #outputAudioData[outputPointer:endPointer] = alteredAudioData/maxAudioVolume
-
-    # smooth out transitiion's audio by quickly fading in/out
     
     if leng < AUDIO_FADE_ENVELOPE_SIZE:
         outputAudioData[outputPointer:endPointer] = 0 # audio is less than 0.01 sec, let's just remove it.
@@ -191,14 +175,7 @@ for chunk in chunks:
 
 wavfile.write(TEMP_FOLDER+"/audioNew.wav",SAMPLE_RATE,outputAudioData)
 
-'''
-outputFrame = math.ceil(outputPointer/samplesPerFrame)
-for endGap in range(outputFrame,audioFrameCount):
-    copyFrame(int(audioSampleCount/samplesPerFrame)-1,endGap)
-'''
-
 command = "ffmpeg -framerate "+str(frameRate)+" -i "+TEMP_FOLDER+"/newFrame%06d.jpg -i "+TEMP_FOLDER+"/audioNew.wav -strict -2 "+OUTPUT_FILE
 subprocess.call(command, shell=True)
 
 deletePath(TEMP_FOLDER)
-
