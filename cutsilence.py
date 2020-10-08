@@ -9,7 +9,6 @@ import math
 from shutil import rmtree, move, copyfile
 import os
 import argparse
-from pytube import YouTube
 from time import time
 import distutils.util
 import tempfile
@@ -24,7 +23,6 @@ def safe_remove(path):
 
 def downloadFile(url):
     sep = os.path.sep
-    originalPath = YouTube(url).streams.first().download()
     filepath = originalPath.split(sep)
     filepath[-1] = filepath[-1].replace(' ','_')
     filepath = sep.join(filepath)
